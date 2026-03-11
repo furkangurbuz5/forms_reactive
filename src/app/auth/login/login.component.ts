@@ -48,6 +48,13 @@ export class LoginComponent implements OnInit, OnDestroy {
   destroy$: Subject<void> = new Subject<void>();
 
   ngOnInit() {
+    const savedForm = window.localStorage.getItem('saved-login-form');
+
+    if(savedForm){
+      const loadedForm = JSON.parse(savedForm);
+      this.loginForm.setValue(loadedForm);
+    }
+
     this.loginForm.valueChanges
       .pipe(debounceTime(300), takeUntil(this.destroy$))
       .subscribe({
