@@ -28,7 +28,7 @@
       />
     </div>
 
-    @if (!isPasswordEqual) {
+    @if (!isPasswordEqual && submitted()) {
       <p class="control-error">Passwords are not equal!</p>
     }
   </div>

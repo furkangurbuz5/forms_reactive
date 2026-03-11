@@ -9,10 +9,14 @@ import {
   Validators,
 } from '@angular/forms';
 
-function arePasswordsEqual(control: AbstractControl) {
-  if (control) {
-    return null;
-  } else return { passwordNotEqual: true };
+function equalValues(controlName1: string, controlName2: string) {
+  return (control: AbstractControl) => {
+    const val1 = control.get(controlName1)?.value;
+    const val2 = control.get(controlName1)?.value;
+    if (val1 === val2) {
+      return null;
+    } else return { valuesNotEqual: true };
+  };
 }
 
 type Roles = 'student' | 'teacher' | 'employee' | 'founder' | 'other';
@@ -31,18 +35,19 @@ export class SignupComponent {
       validators: [Validators.email, Validators.required],
     }),
 
-    passwords: new FormGroup({
-      password: new FormControl('', {
-        validators: [Validators.required, Validators.minLength(6)],
-      }),
-      confirmPassword: new FormControl('', {
-        validators: [
-          Validators.required,
-          Validators.minLength(6),
-          arePasswordsEqual,
-        ],
-      }),
-    }),
+    passwords: new FormGroup(
+      {
+        password: new FormControl('', {
+          validators: [Validators.required, Validators.minLength(6)],
+        }),
+        confirmPassword: new FormControl('', {
+          validators: [Validators.required, Validators.minLength(6)],
+        }),
+      },
+      {
+        validators: [equalValues('password', 'confirmPassword')],
+      },
+    ),
 
     firstName: new FormControl('', {
       validators: [Validators.required],
@@ -87,7 +92,6 @@ export class SignupComponent {
       console.error('Form is invalid!');
       return;
     }
-
   }
   onReset() {
     this.submitted.set(false);
@@ -96,6 +100,6 @@ export class SignupComponent {
   }
 
   get isPasswordEqual() {
-    return this.signupForm.controls.passwords.controls.confirmPassword.valid;
+    return this.signupForm.controls.passwords.valid;
   }
 }
