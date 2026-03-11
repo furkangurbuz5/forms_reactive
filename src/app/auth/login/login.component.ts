@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import {
   AbstractControl,
   FormControl,
@@ -6,7 +6,7 @@ import {
   ReactiveFormsModule,
   Validators,
 } from '@angular/forms';
-import { of } from 'rxjs';
+import { debounceTime, of, Subject, takeUntil } from 'rxjs';
 
 function mustContainQuestionMark(control: AbstractControl) {
   if (control.value.includes('?')) {
@@ -29,13 +29,11 @@ function emailIsUnique(control: AbstractControl) {
   templateUrl: './login.component.html',
   styleUrl: './login.component.css',
 })
-export class LoginComponent {
+export class LoginComponent implements OnInit, OnDestroy {
   loginForm = new FormGroup({
     email: new FormControl('', {
       validators: [Validators.email, Validators.required],
-      asyncValidators: [
-        emailIsUnique
-      ],
+      asyncValidators: [emailIsUnique],
     }),
     password: new FormControl('', {
       validators: [
@@ -46,6 +44,22 @@ export class LoginComponent {
       asyncValidators: [],
     }),
   });
+
+  destroy$: Subject<void> = new Subject<void>();
+
+  ngOnInit() {
+    this.loginForm.valueChanges
+      .pipe(debounceTime(300), takeUntil(this.destroy$))
+      .subscribe({
+        next: (val) => {
+          window.localStorage.setItem('saved-login-form', JSON.stringify(val));
+        },
+      });
+  }
+
+  ngOnDestroy() {
+    this.destroy$.next();
+  }
 
   get emailInvalid() {
     return (
